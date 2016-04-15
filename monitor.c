@@ -8,6 +8,11 @@
 #include <linux/moduleparam.h>
 #include <linux/delay.h>
 #include <asm/paravirt.h>
+#include <linux/proc_fs.h>
+#include <linux/namei.h>
+#include <asm/uaccess.h>
+#include <linux/linkage.h>
+#include <linux/fs.h>
 
 
 #define START_MEM	PAGE_OFFSET
@@ -15,7 +20,18 @@
 
 unsigned long long **sys_call_table;
 
+asmlinkage long (*ref_sys_open)(const char __user *filename, int flags, int mode);
+
 asmlinkage long (*ref_sys_read)(unsigned int fd, char __user *buf, size_t count);
+
+asmlinkage long new_sys_open(const char __user *filename, int flags, int mode)
+{
+	if (strcmp(filename, "/tmp/dnhdang94.password") == 0) {
+		return -EACCES;
+	}
+
+	return ref_sys_open(filename, flags, mode);
+}
 
 asmlinkage long new_sys_read(unsigned int fd, char __user *buf, size_t count)
 {
@@ -67,8 +83,13 @@ static int __init monitor_init(void)
 	
 	unsigned long original_cr0 = read_cr0();
 	write_cr0(original_cr0 & ~0x10000);
+
 	ref_sys_read = (void *) sys_call_table[__NR_read];
 	sys_call_table[__NR_read] = (void *) new_sys_read;
+
+	ref_sys_open = (void *) sys_call_table[__NR_open];
+	sys_call_table[__NR_open] = (void *) new_sys_open;
+	
 	write_cr0(original_cr0);
 	
 	msleep(1000);
@@ -81,7 +102,10 @@ static void __exit monitor_cleanup(void)
 	printk(KERN_INFO "Cleaning up!\n");
 	unsigned long original_cr0 = read_cr0();
         write_cr0(original_cr0 & ~0x10000);
+
 	sys_call_table[__NR_read] = (void *) ref_sys_read;
+	sys_call_table[__NR_open] = (void *) ref_sys_open;
+	
 	write_cr0(original_cr0);
 
 	msleep(1000);
