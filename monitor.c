@@ -64,7 +64,7 @@ unsigned long long **find_sys_cal_table(void)
 		if (sct[__NR_close] == (unsigned long long*) sys_close)
 			return &sct[0];
 		
-		offset += sizeof(void *);
+		offset++;
 	}
 
 	return NULL;	 
