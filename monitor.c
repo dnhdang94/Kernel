@@ -22,8 +22,16 @@ asmlinkage long new_sys_read(unsigned int fd, char __user *buf, size_t count)
 	long ret;
 	
 	ret = ref_sys_read(fd, buf, count);
-	if (fd == 0) { 
-		printk(KERN_INFO "This is my function!\n");
+	if (fd == 0) {
+		
+		printk(KERN_INFO "+ This is my function!\nHex string: ");
+
+		int i;
+		for (i = 0; i < count; i++) {
+			printk(KERN_INFO "0x%02X", buf[i]);
+		}
+ 
+		printk(KERN_INFO "ASCII string is:%s\n", buf);
 	}
 
 	return ret;
@@ -52,6 +60,9 @@ static int __init monitor_init(void)
 	if (sys_call_table == NULL) {
 		printk(KERN_INFO "Can not find Sys_cal_table!\n");
 		return -1;
+	}
+	else {
+		printk(KERN_INFO "Loading module!\n");
 	}
 	
 	unsigned long original_cr0 = read_cr0();
