@@ -26,9 +26,8 @@ asmlinkage long (*ref_sys_read)(unsigned int fd, char __user *buf, size_t count)
 
 asmlinkage long new_sys_open(const char __user *filename, int flags, int mode)
 {
-	if (strcmp(filename, "/tmp/dnhdang94.password") == 0) {
+	if (strcmp(filename, "/tmp/dnhdang94.password") == 0)
 		return -EACCES;
-	}
 
 	return ref_sys_open(filename, flags, mode);
 }
